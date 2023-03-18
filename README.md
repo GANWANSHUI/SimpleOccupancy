@@ -17,13 +17,13 @@
 ### Sparse occupancy prediction:
 
 <p align='center'>
-<img src="./assets/sparse_demo.gif" width="820px">
+<img src="./assets/sparse_demo.gif" width="800px">
 <img src="./assets/label.jpg" width="620px">
 </p>
 
 ### Dense occupancy prediction:
 <p align='center'>
-<img src="./assets/dense_demo.gif" width="820px">
+<img src="./assets/dense_demo.gif" width="800px">
 </p>
 
 
