@@ -10,7 +10,7 @@
  
 ## News
 
-- [2023/3/20]: Initial release.
+- [2023/3/18]: Initial release.
 
 ## Demo  
 
@@ -27,12 +27,12 @@
 </p>
 
 
-## Introduction
+## Abstract
 The task of estimating 3D occupancy from surrounding-view images is an exciting development in the field of autonomous driving, following the success of Bird's Eye View (BEV) perception. This task provides crucial 3D attributes of the driving environment, enhancing the overall understanding and perception of the surrounding space. However, there is still a lack of a baseline to define the task, such as network design, optimization, and evaluation. In this work, we present a simple attempt for 3D occupancy estimation, which is a CNN-based framework designed to reveal several key factors for 3D occupancy estimation. In addition, we explore the relationship between 3D occupancy estimation and other related tasks, such as monocular depth estimation, stereo matching, and BEV perception (3D object detection and map segmentation), which could advance the study on 3D occupancy estimation. For evaluation, we propose a simple sampling strategy to define the metric for occupancy evaluation, which is flexible for current public datasets. Moreover, we establish a new benchmark in terms of the depth estimation metric, where we compare our proposed method with monocular depth estimation methods on the DDAD and Nuscenes datasets.
 
 ## Method 
 
-Method Pipeline:
+Proposed network:
 
 <p align='center'>
 <img src="./assets/network.png" width="720px">
