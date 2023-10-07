@@ -1,0 +1,36 @@
+# data
+dataset = ddad
+dataroot = /data/ggeoinfo/Wanshui_BEV/data/ddad
+
+# training
+min_depth = 0.1
+max_depth = 52
+batch_size = 6
+num_epochs = 12
+eval_frequency = -1
+
+
+skip = True
+focal = False
+focal_scale = 715.0873
+use_fix_mask=True
+joint_pose=True
+
+use_sfm_spatial = True
+match_spatial_weight = 0.1
+thr_dis = 1
+spatial=False
+spatial_weight=0.1
+
+
+height = 336
+width = 672
+height_ori = 1216
+width_ori = 1936
+
+position=embedding1
+# No, embedding, embedding1
+
+model_name=ddad/
+
+

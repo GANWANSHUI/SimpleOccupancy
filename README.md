@@ -9,7 +9,8 @@
 > Wanshui Gan, Ningkai Mo, Hongbin Xu, Naoto Yokoya 
  
 ## News
-
+- [2023/10/07]: Update the paper. The first and preliminary version is realeased. Code may not be cleaned thoroughly, so feel free to open an issue if any question.
+- [2023/4/05]: Update the paper with supplementary material. Code repository is still under construction.
 - [2023/3/18]: Initial release.
 
 ## Demo  
