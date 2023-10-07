@@ -1,6 +1,4 @@
 import math
-import pdb
-
 import torch.nn.functional as F
 import torch.nn as nn
 
@@ -202,105 +200,6 @@ class S3DCNN(nn.Module):
         cost3 = self.classif3(out3)
 
         return [cost3]
-
-
-
-
-
-class S3DCNN_multi_scale(nn.Module):
-    def __init__(self,  input_planes = 64, out_planes = 1, planes = 16,  conv_3d_types1 = "3D", activate_fun = nn.ReLU(inplace=True), opt = None):
-        super(S3DCNN_multi_scale, self).__init__()
-        self.out_planes = out_planes
-        self.planes = planes
-
-        self.opt = opt
-        self.dres0 = nn.Sequential(convbn_3d(input_planes, planes*2, 3, 1, 1, conv_3d_types =  conv_3d_types1),
-                                     activate_fun,
-                                     convbn_3d(planes*2, planes*2, 3, 1, 1, conv_3d_types =  conv_3d_types1),
-                                     activate_fun)
-
-
-        self.dres1 = nn.Sequential(convbn_3d(planes*2, planes*2, 3, 1, 1, conv_3d_types = conv_3d_types1),
-                                   activate_fun,
-                                   convbn_3d(planes*2, planes*2, 3, 1, 1, conv_3d_types = conv_3d_types1))
-
-        self.dres2 = hourglass_PSMNet(planes*2, conv_3d_types1 = conv_3d_types1, activate_fun = activate_fun)
-
-        self.dres3 = hourglass_PSMNet(planes*2, conv_3d_types1 = conv_3d_types1, activate_fun = activate_fun)
-
-        self.dres4 = hourglass_PSMNet(planes*2, conv_3d_types1 = conv_3d_types1, activate_fun = activate_fun)
-
-
-        self.classif1 = nn.Sequential(convbn_3d(planes*2, planes*2, 3, 1, 1, conv_3d_types =  conv_3d_types1),
-                                      activate_fun,
-                                      nn.Conv3d(planes*2, out_planes, kernel_size=3, padding=1, stride=1,bias=False))
-
-        self.classif2 = nn.Sequential(convbn_3d(planes*2, planes*2, 3, 1, 1, conv_3d_types =  conv_3d_types1),
-                                      activate_fun,
-                                      nn.Conv3d(planes*2, out_planes, kernel_size=3, padding=1, stride=1,bias=False))
-
-        self.classif3 = nn.Sequential(convbn_3d(planes * 2, planes * 2, 3, 1, 1, conv_3d_types=conv_3d_types1),
-                                      nn.ReLU(inplace=True),
-                                      nn.Conv3d(planes * 2, out_planes, kernel_size=(1, 3, 3), stride=1,
-                                                padding=(0, 1, 1), bias=False),
-                                      # nn.BatchNorm3d(out_planes),
-                                      nn.ReLU(inplace=True),
-                                      nn.Conv3d(out_planes, out_planes, kernel_size=(3, 1, 1), stride=1,
-                                                padding=(1, 0, 0), bias=False))
-
-
-
-        for m in self.modules():
-            if isinstance(m, nn.Conv2d):
-                n = m.kernel_size[0] * m.kernel_size[1] * m.out_channels
-                m.weight.data.normal_(0, math.sqrt(2. / n))
-            elif isinstance(m, nn.Conv3d):
-                n = m.kernel_size[0] * m.kernel_size[1]*m.kernel_size[2] * m.out_channels
-                m.weight.data.normal_(0, math.sqrt(2. / n))
-            elif isinstance(m, nn.BatchNorm2d):
-                m.weight.data.fill_(1)
-                m.bias.data.zero_()
-            elif isinstance(m, nn.BatchNorm3d):
-                m.weight.data.fill_(1)
-                m.bias.data.zero_()
-            elif isinstance(m, nn.Linear):
-                m.bias.data.zero_()
-
-
-    def forward(self, cost):
-
-        #################
-        cost0 = self.dres0(cost)
-        # print("cost0 size:", cost0.size())
-
-        # [3, 32, 6, 8, 15] [3, 32, 48, 64, 128])
-
-        cost0 = self.dres1(cost0) + cost0
-
-        # print("cost0 size:", cost0.shape)
-
-        out1, pre1, post1 = self.dres2(cost0, None, None)
-
-        # print("out1 size", out1.size())
-        # print("cost0 size:", cost0.size())
-        out1 = out1 + cost0
-
-        out2, pre2, post2 = self.dres3(out1, pre1, post1)
-        out2 = out2 + cost0
-
-        out3, pre3, post3 = self.dres4(out2, pre1, post2)
-        out3 = out3 + cost0
-
-        cost1 = self.classif1(out1)
-        cost2 = self.classif2(out2) + cost1
-        cost3 = self.classif3(out3) + cost2
-
-        # pdb.set_trace()
-
-        return [cost1, cost2, cost3]
-
-
-
 
 
 def pad_to_shape(this, shp):

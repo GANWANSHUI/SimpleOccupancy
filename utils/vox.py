@@ -17,8 +17,6 @@ class Vox_util(nn.Module):
 
         self.XMIN, self.XMAX, self.YMIN, self.YMAX, self.ZMIN, self.ZMAX = bounds
 
-        # pdb.set_trace()
-
         self.Z, self.Y, self.X = Z, Y, X # 16, 256, 256
 
         self.max_depth = math.sqrt(self.XMAX*self.XMAX + self.YMAX*self.YMAX + self.ZMAX*self.ZMAX)
@@ -85,6 +83,8 @@ class Vox_util(nn.Module):
         # pdb.set_trace()
         xyz_ref = geom.apply_4x4(ref_T_mem, xyz_mem)
         return xyz_ref
+
+
 
     def get_mem_T_ref(self, B, Z, Y, X, assert_cube=False, device='cuda'):
         vox_size_X = (self.XMAX-self.XMIN)/float(X)
@@ -310,7 +310,6 @@ class Vox_util(nn.Module):
         # B x C x Z x Y x X
         return feat_voxels
 
-
     def unproject_image_to_mem(self, rgb_camB, pixB_T_camA, camB_T_camA, Z, Y, X, assert_cube=False):
         # rgb_camB is B x C x H x W
         # pixB_T_camA is B x 4 x 4
@@ -326,12 +325,6 @@ class Vox_util(nn.Module):
         # y is height here
 
         xyz_camA = self.Mem2Ref(xyz_memA, Z, Y, X, assert_cube=assert_cube) #
-
-        # 测试坐标
-
-        # pdb.set_trace()
-
-        print('xyz_camA', xyz_camA[..., 1].max(), xyz_camA[..., 3].max())
 
         xyz_camB = geom.apply_4x4(camB_T_camA, xyz_camA)
 

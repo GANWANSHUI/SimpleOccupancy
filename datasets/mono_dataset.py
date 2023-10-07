@@ -13,13 +13,12 @@ import copy
 from PIL import Image  # using pillow-simd for increased speed
 import time
 import cv2
-from torchvision.transforms import InterpolationMode
 
 import torch
 import torch.utils.data as data
 from torchvision import transforms
 import pdb
-import pdb as o3d
+import open3d as o3d
 
 
 
@@ -55,9 +54,7 @@ class MonoDataset(data.Dataset):
         self.height = height
         self.width = width
         self.num_scales = num_scales
-
-        # self.interp = Image.ANTIALIAS
-        self.interp = InterpolationMode.BICUBIC
+        self.interp = Image.ANTIALIAS
 
         self.frame_idxs = frame_idxs
 
