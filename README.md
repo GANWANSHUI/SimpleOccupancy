@@ -1,6 +1,7 @@
 # SimpleOccupancy
 
-### [Paper](https://arxiv.org/pdf/2303.10076.pdf)
+[//]: # (### [Project Page]&#40;https://weiyithu.github.io/SurroundOcc/&#41; | [Paper]&#40;https://arxiv.org/abs/2303.09551&#41; | [Video]&#40;https://cloud.tsinghua.edu.cn/d/97b74c039b8d4fd48830/&#41; | [Data]&#40;https://cloud.tsinghua.edu.cn/d/8dcb547238144d08a0bb/&#41;)
+
 [//]: # (<br/>)
 
 > A **Simple** Attempt for 3D **Occupancy** Estimation in Autonomous Driving
@@ -9,7 +10,6 @@
  
 ## News
 
-- [2023/4/05]: Update the paper with supplementary material. Code repository is still under construction.
 - [2023/3/18]: Initial release.
 
 ## Demo  
@@ -62,16 +62,24 @@ Related Projects:
 
 
 ## Bibtex
-If this work is helpful for your research, please consider citing the following BibTeX entry.
-```
-@article{gan2023simple,
-  title={A Simple Attempt for 3D Occupancy Estimation in Autonomous Driving},
-  author={Gan, Wanshui and Mo, Ningkai and Xu, Hongbin and Yokoya, Naoto},
-  journal={arXiv preprint arXiv:2303.10076},
-  year={2023}
-}
 
-```
+[//]: # (If this work is helpful for your research, please consider citing the following BibTeX entry.)
+
+[//]: # (```)
+
+[//]: # (@article{wei2023surroundocc, )
+
+[//]: # (      title={SurroundOcc: Multi-Camera 3D Occupancy Prediction for Autonomous Driving}, )
+
+[//]: # (      author={Yi Wei and Linqing Zhao and Wenzhao Zheng and Zheng Zhu and Jie Zhou and Jiwen Lu},)
+
+[//]: # (      journal={arXiv preprint arXiv:2303.09551},)
+
+[//]: # (      year={2023})
+
+[//]: # (})
+
+[//]: # (```)
 
 
 
