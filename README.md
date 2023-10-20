@@ -4,16 +4,31 @@
 
 [//]: # (<br/>)
 
-> A **Simple** Attempt for 3D **Occupancy** Estimation in Autonomous Driving
+> A **Simple** Framework for 3D **Occupancy** Estimation in Autonomous Driving
 > 
 > Wanshui Gan, Ningkai Mo, Hongbin Xu, Naoto Yokoya 
  
 ## News
+- [2023/10/20]: We extend the framework to the 3D reconstruction task based on the SDF at the mesh level with the self-supervised setting. The related paper and code will be updated soon. I am open to discussion and collaboration on related topics.
 - [2023/10/07]: Update the paper. The first and preliminary version is realeased. Code may not be cleaned thoroughly, so feel free to open an issue if any question.
 - [2023/4/05]: Update the paper with supplementary material. Code repository is still under construction.
 - [2023/3/18]: Initial release.
 
 ## Demo  
+
+### RGB, Depth and Mesh:
+<p align='center'>
+<img src="./assets/SDF_rgb_depth_mesh.gif" width="720px">
+Self-supervised learning with SDF (Max depth = 52 m)
+</p>
+
+---
+
+<p align='center'>
+<img src="./assets/Density_rgb_depth_mesh.gif" width="720px"> 
+Self-supervised learning with Density (Max depth = 52 m)
+</p>
+
 
 ### Sparse occupancy prediction:
 
@@ -29,14 +44,12 @@
 
 
 ## Abstract
-The task of estimating 3D occupancy from surrounding-view images is an exciting development in the field of autonomous driving, following the success of Bird's Eye View (BEV) perception. This task provides crucial 3D attributes of the driving environment, enhancing the overall understanding and perception of the surrounding space. However, there is still a lack of a baseline to define the task, such as network design, optimization, and evaluation. In this work, we present a simple attempt for 3D occupancy estimation, which is a CNN-based framework designed to reveal several key factors for 3D occupancy estimation. In addition, we explore the relationship between 3D occupancy estimation and other related tasks, such as monocular depth estimation, stereo matching, and BEV perception (3D object detection and map segmentation), which could advance the study on 3D occupancy estimation. For evaluation, we propose a simple sampling strategy to define the metric for occupancy evaluation, which is flexible for current public datasets. Moreover, we establish a new benchmark in terms of the depth estimation metric, where we compare our proposed method with monocular depth estimation methods on the DDAD and Nuscenes datasets.
-
+The task of estimating 3D occupancy from surrounding-view images is an exciting development in the field of autonomous driving, following the success of Bird's Eye View (BEV) perception. This task provides crucial 3D attributes of the driving environment, enhancing the overall understanding and perception of the surrounding space. In this work, we present a simple framework for 3D occupancy estimation, which is a CNN-based framework designed to reveal several key factors for 3D occupancy estimation, such as network design, optimization, and evaluation. In addition, we explore the relationship between 3D occupancy estimation and other related tasks, such as monocular depth estimation and 3D reconstruction, which could advance the study of 3D perception in autonomous driving. For evaluation, we propose a simple sampling strategy to define the metric for occupancy evaluation, which is flexible for current public datasets. Moreover, we establish the benchmark in terms of the depth estimation metric, where we compare our proposed method with monocular depth estimation methods on the DDAD and Nuscenes datasets and achieve competitive performance. 
 ## Method 
 
 Proposed network:
-
 <p align='center'>
-<img src="./assets/network.png" width="720px">
+<img src="./assets/network_self.png" width="920px">
 </p>
 
 Occupancy label and metric comparison:
@@ -63,24 +76,15 @@ Related Projects:
 
 
 ## Bibtex
-
-[//]: # (If this work is helpful for your research, please consider citing the following BibTeX entry.)
-
-[//]: # (```)
-
-[//]: # (@article{wei2023surroundocc, )
-
-[//]: # (      title={SurroundOcc: Multi-Camera 3D Occupancy Prediction for Autonomous Driving}, )
-
-[//]: # (      author={Yi Wei and Linqing Zhao and Wenzhao Zheng and Zheng Zhu and Jie Zhou and Jiwen Lu},)
-
-[//]: # (      journal={arXiv preprint arXiv:2303.09551},)
-
-[//]: # (      year={2023})
-
-[//]: # (})
-
-[//]: # (```)
+If you find this repository/work helpful in your research, welcome to cite the paper and give a ⭐.
+```
+@article{gan2023simple,
+  title={A Simple Attempt for 3D Occupancy Estimation in Autonomous Driving},
+  author={Gan, Wanshui and Mo, Ningkai and Xu, Hongbin and Yokoya, Naoto},
+  journal={arXiv preprint arXiv:2303.10076},
+  year={2023}
+}
+```
 
 
 
