@@ -19,9 +19,11 @@
 ### RGB, Depth and Mesh:
 <p align='center'>
 <img src="./assets/SDF_rgb_depth_mesh.gif" width="720px">
-Self-supervised learning with SDF (Max depth = 52 m)
+Self-supervised learning with SDF (Max depth = 52 m )
 </p>
+
 ---
+
 <p align='center'>
 <img src="./assets/Density_rgb_depth_mesh.gif" width="720px"> 
 Self-supervised learning with Density (Max depth = 52 m)
@@ -31,7 +33,7 @@ Self-supervised learning with Density (Max depth = 52 m)
 ### Sparse occupancy prediction:
 
 <p align='center'>
-<img src="./assets/sparse_demo.gif" width="720px">
+<img src="./assets/sparse_demo.gif" width="720px">  
 <img src="./assets/label.jpg" width="600px">
 </p>
 
