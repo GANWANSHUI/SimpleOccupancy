@@ -54,7 +54,7 @@ The task of estimating 3D occupancy from surrounding-view images is an exciting 
 
 Proposed network:
 <p align='center'>
-<img src="./assets/network_self.png" width="920px">
+<img src="./assets/Network_self.png" width="920px">
 </p>
 
 Occupancy label and metric comparison:
