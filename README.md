@@ -9,7 +9,7 @@
 > Wanshui Gan, Ningkai Mo, Hongbin Xu, Naoto Yokoya 
  
 ## News
-- [2023/10/21]: We extend the framework to the 3D reconstruction task based on the SDF at the mesh level with the self-supervised setting. The related paper and code will be updated soon. I am open to discussion and collaboration on related topics.
+- [2023/10/20]: We extend the framework to the 3D reconstruction task based on the SDF at the mesh level with the self-supervised setting. The related paper and code will be updated soon. I am open to discussion and collaboration on related topics.
 - [2023/10/07]: Update the paper. The first and preliminary version is realeased. Code may not be cleaned thoroughly, so feel free to open an issue if any question.
 - [2023/4/05]: Update the paper with supplementary material. Code repository is still under construction.
 - [2023/3/18]: Initial release.
@@ -18,14 +18,19 @@
 
 ### RGB, Depth and Mesh:
 <p align='center'>
-<img src="./assets/SDF_rgb_depth_mesh.gif" width="720px">
+<img src="./assets/SDF_rgb_depth_mesh.gif" width="620px">
+</p>
+<p align='center'>
 Self-supervised learning with SDF (Max depth = 52 m )
 </p>
+
 
 ---
 
 <p align='center'>
-<img src="./assets/Density_rgb_depth_mesh.gif" width="720px"> 
+<img src="./assets/Density_rgb_depth_mesh.gif" width="620px">
+</p>
+<p align='center'>
 Self-supervised learning with Density (Max depth = 52 m)
 </p>
 
