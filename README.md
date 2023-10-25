@@ -1,15 +1,13 @@
 # SimpleOccupancy
 
-[//]: # (### [Project Page]&#40;https://weiyithu.github.io/SurroundOcc/&#41; | [Paper]&#40;https://arxiv.org/abs/2303.09551&#41; | [Video]&#40;https://cloud.tsinghua.edu.cn/d/97b74c039b8d4fd48830/&#41; | [Data]&#40;https://cloud.tsinghua.edu.cn/d/8dcb547238144d08a0bb/&#41;)
-
-[//]: # (<br/>)
+[Arxiv Paper](https://arxiv.org/pdf/2303.10076.pdf)
 
 > A **Simple** Framework for 3D **Occupancy** Estimation in Autonomous Driving
 > 
 > Wanshui Gan, Ningkai Mo, Hongbin Xu, Naoto Yokoya 
  
 ## News
-- [2023/10/20]: We extend the framework to the 3D reconstruction task based on the SDF at the mesh level with the self-supervised setting. The related paper and code will be updated soon. I am open to discussion and collaboration on related topics.
+- [2023/10/20]: We extend the framework to the 3D reconstruction task based on the SDF at the mesh level with the self-supervised setting. I am open to discussion and collaboration on related topics.
 - [2023/10/07]: Update the paper. The first and preliminary version is realeased. Code may not be cleaned thoroughly, so feel free to open an issue if any question.
 - [2023/4/05]: Update the paper with supplementary material. Code repository is still under construction.
 - [2023/3/18]: Initial release.
