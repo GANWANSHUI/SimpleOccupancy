@@ -5,8 +5,10 @@
 > A **Simple** Framework for 3D **Occupancy** Estimation in Autonomous Driving
 > 
 > Wanshui Gan, Ningkai Mo, Hongbin Xu, Naoto Yokoya 
- 
+
+
 ## News
+-- Note that the demos are large, please wait a moment to load them. 
 - [2023/10/20]: We extend the framework to the 3D reconstruction task based on the SDF at the mesh level with the self-supervised setting. I am open to discussion and collaboration on related topics.
 - [2023/10/07]: Update the paper. The first and preliminary version is realeased. Code may not be cleaned thoroughly, so feel free to open an issue if any question.
 - [2023/4/05]: Update the paper with supplementary material. Code repository is still under construction.
