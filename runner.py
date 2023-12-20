@@ -29,6 +29,7 @@ sys.path.append("..")
 from utils.loss_metric import *
 from utils.layers import *
 import utils.basic as basic
+import utils.geom as geom
 
 
 def get_dist_info(return_gpu_per_machine=False):
@@ -80,8 +81,8 @@ class Runer:
         self.opt.B = self.opt.batch_size // 6
 
         self.log_path = os.path.join(self.opt.log_dir, self.opt.model_name +
-                                     '{}_volume_{}_loss_{}_epoch_{}/method_{}_val_{}_voxel_{}_sur_{}_empty_w_{}_depth_{}_out_{}_en_{}_input_{}_vtrans_{}/step_{}_size_{}_rlde_{}_aggregation_{}_type_{}_pe_{}'.format(
-                                         self.opt.data_type, self.opt.volume_depth, self.opt.loss_type, self.opt.num_epochs,
+                                     '{}_volume_{}_loss_{}_epoch_{}_sdf_{}/method_{}_val_{}_voxel_{}_sur_{}_empty_w_{}_depth_{}_out_{}_en_{}_input_{}_vtrans_{}/step_{}_size_{}_rlde_{}_aggregation_{}_type_{}_pe_{}'.format(
+                                         self.opt.data_type, self.opt.volume_depth, self.opt.loss_type, self.opt.num_epochs, self.opt.sdf,
                                          self.opt.method, self.opt.val_reso, self.opt.l1_voxel,
                                          self.opt.surfaceloss, self.opt.empty_w, self.opt.max_depth,
                                          self.opt.out_channel, self.opt.encoder, self.opt.input_channel, self.opt.view_trans,
@@ -94,6 +95,7 @@ class Runer:
         os.makedirs(os.path.join(self.log_path, 'models'), exist_ok=True)
         os.makedirs(os.path.join(self.log_path, 'visual_rgb_depth'), exist_ok=True)
         os.makedirs(os.path.join(self.log_path, 'visual_feature'), exist_ok=True)
+        os.makedirs(os.path.join(self.log_path, 'mesh'), exist_ok=True)
 
         # pdb.set_trace()
 
@@ -213,6 +215,18 @@ class Runer:
             self.ssim = SSIM()
             self.ssim.to(self.device)
 
+        self.backproject_depth = {}
+        self.project_3d = {}
+
+        for scale in self.opt.scales:
+            h = self.opt.height // (2 ** scale)
+            w = self.opt.width // (2 ** scale)
+
+            self.backproject_depth[scale] = BackprojectDepth(self.opt.batch_size, h, w)
+            self.backproject_depth[scale].to(self.device)
+
+            self.project_3d[scale] = Project3D(self.opt.batch_size, h, w)
+            self.project_3d[scale].to(self.device)
 
         self.depth_metric_names = [
             "de/abs_rel", "de/sq_rel", "de/rms", "de/log_rms", "da/a1", "da/a2", "da/a3"]
@@ -227,7 +241,7 @@ class Runer:
     def my_collate(self, batch):
         batch_new = {}
         keys_list = list(batch[0].keys())
-        special_key_list = ['id', 'match_spatial', 'point_cloud', 'label', 'point_cloud_path', 'point_cloud_label']
+        special_key_list = ['id', 'match_spatial', 'point_cloud', 'label', 'point_cloud_path', 'point_cloud_label','point_cloud_name']
 
         for key in keys_list:
             if key not in special_key_list:
@@ -251,7 +265,7 @@ class Runer:
 
         special_key_list = ['id', 'label', 'point_cloud', 'label_empty', 'label_center', 'empty', 'True_center',
                             'all_empty',
-                            'True_voxel_group', 'point_cloud_path', 'point_cloud_label', ('K_ori', -1), ('K_ori', 1)]
+                            'True_voxel_group', 'point_cloud_path', 'point_cloud_label', ('K_ori', -1), ('K_ori', 1),'point_cloud_name']
         match_key_list = ['match_spatial']
 
         for key, ipt in inputs.items():
@@ -472,11 +486,16 @@ class Runer:
 
                 if self.opt.volume_depth and self.opt.evl_score:
 
-                    threshold_list = [0.001, 0.005, 0.01, 0.05, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 0.95, 0.98, 0.99]
+                    if self.opt.sdf != 'No':
+                        threshold_list = [-0.5, -0.4, -0.3, -0.2, -0.1, -0.05, -0.01, 0, 0.01, 0.05, 0.1, 0.2, 0.3, 0.4, 0.5]
+                    else:
+                        threshold_list = [0.001, 0.005, 0.01, 0.05, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 0.95, 0.98, 0.99]
+                    
                     xy_range = [26, 52]
 
                     for x_range_i in xy_range:
-                        abs_rel, sq_rel, rmse, rmse_log, a1, a2, a3, point_error = get_occupancy_depth_score(inputs=data, outputs=output, threshold_list=threshold_list, xy_range = x_range_i)
+                        
+                        abs_rel, sq_rel, rmse, rmse_log, a1, a2, a3, point_error = get_occupancy_depth_score(inputs=data, outputs=output, threshold_list=threshold_list, xy_range = x_range_i, save_path = self.log_path, opt = self.opt)
 
                         if x_range_i == 52:
                             total_abs_rel_52.append(abs_rel)
@@ -605,7 +624,25 @@ class Runer:
 
                         vis_dic['probability'] = output['density']
 
+
+                        vis_dic[('K', 0, 0)] = data[('K', 0, 0)]
+
+                        vis_dic[('K_render', 0, 0)] = data[('K_render', 0, 0)]
+                        depth_pred_save = F.interpolate(output[('disp', 0)], size=[self.opt.height_ori, self.opt.width_ori], mode="bilinear", align_corners=False).squeeze(1)
+
+                        vis_dic[('disp', 0)] = depth_pred_save
+                        vis_dic['depth'] = data['depth']
+
+                        color_save = F.interpolate(data[('color', 0, 0)], size=[self.opt.height_ori, self.opt.width_ori], mode="bilinear", align_corners=False).squeeze(1)
+                        vis_dic[('color', 0, 0)] = color_save
+
+
                         np.save('{}/visual_feature/{}.npy'.format(self.log_path, idx), vis_dic)
+
+                        if self.opt.vis_sdf:
+                            save_name = data['point_cloud_name'][0][18:-8]
+                            output['mesh'].write('{}/mesh/{}_{}.ply'.format(self.log_path, idx, save_name)) 
+
 
         # for occupancy metric
         if self.opt.evl_score and save_image:
@@ -708,12 +745,400 @@ class Runer:
         self.to_device(inputs)
 
         features = self.models["encoder"](inputs["color_aug", 0, 0])
-        outputs = self.models["depth"](features, inputs)
+        # outputs = self.models["depth"](features, inputs)
+
+        outputs = {}
+
+        if self.opt.loss_type == 'gt':
+            pass
+        else:
+            if self.opt.predictive_mask:  # False
+                outputs["predictive_mask"] = self.models["predictive_mask"](features)
+
+        if self.use_pose_net:  # True
+            outputs.update(self.predict_poses(inputs, features))
+
+
+        # pdb.set_trace()
+        outputs.update(self.models["depth"](features, inputs)) 
+
+         
+        if self.opt.loss_type == 'gt':
+            pass
+        else:
+            self.generate_images_pred(inputs, outputs)
+
 
         losses = self.compute_losses(inputs, outputs)
 
         return outputs, losses
 
+    def predict_poses(self, inputs, features):
+        """Predict poses between input frames for monocular sequences.
+        """
+        outputs = {}
+
+        if self.opt.gt_pose:
+
+            outputs[("ego_T_ego", -1)] = geom.safe_inverse(inputs[('gt_pose', -1)]).squeeze(0) @ inputs[
+                ('gt_pose', 0)].squeeze(0)
+            outputs[("ego_T_ego", 1)] = geom.safe_inverse(inputs[('gt_pose', 1)]).squeeze(0) @ inputs[
+                ('gt_pose', 0)].squeeze(0)
+            
+            for f_i in self.opt.frame_ids[1:]:
+                trans = outputs[("ego_T_ego", f_i)].repeat(6, 1, 1)
+                outputs[("cam_T_cam", 0, f_i)] = torch.linalg.inv(inputs["pose_spatial"]) @ trans @ inputs["pose_spatial"]
+
+
+            return outputs
+
+
+
+        # pdb.set_trace()
+        if self.num_pose_frames == 2:
+            # In this setting, we compute the pose to each source frame via a
+            # separate forward pass through the pose network.
+
+            # select what features the pose network takes as input
+            if self.opt.pose_model_type == "shared":
+                pose_feats = {f_i: features[f_i] for f_i in self.opt.frame_ids}
+            else:
+                pose_feats = {f_i: inputs["color_aug", f_i, 0] for f_i in self.opt.frame_ids}
+
+            for f_i in self.opt.frame_ids[1:]:
+
+                if f_i != "s":
+                    # To maintain ordering we always pass frames in temporal order
+                    if f_i < 0:
+                        pose_inputs = [pose_feats[f_i], pose_feats[0]]
+                    else:
+                        pose_inputs = [pose_feats[0], pose_feats[f_i]]
+
+                    if self.opt.pose_model_type == "separate_resnet":
+                        pose_inputs = [self.models["pose_encoder"](torch.cat(pose_inputs, 1))]
+
+
+                    elif self.opt.pose_model_type == "posecnn":
+                        pose_inputs = torch.cat(pose_inputs, 1)
+
+                    if self.opt.gt_pose == 'gtr':
+
+                        if f_i < 0:
+                            coarse_RT = torch.linalg.inv(outputs[('ego_T_ego', f_i)])
+
+                        else:
+                            coarse_RT = outputs[('ego_T_ego', f_i)]
+
+                        # 旋转矩阵转轴角
+                        # pdb.set_trace()
+                        # coarse_axisangle = matrix_to_axis_angle(coarse_RT[:3,:3].unsqueeze(0)).unsqueeze(0)
+                        # coarse_translation = coarse_RT[:3, 3][None, None, :]
+
+                    else:
+                        coarse_RT = None
+
+                    axisangle, translation = self.models["pose"](pose_inputs, joint_pose=self.opt.joint_pose,
+                                                                 coarse_RT=coarse_RT)
+
+                    outputs[("axisangle", 0, f_i)] = axisangle
+                    outputs[("translation", 0, f_i)] = translation
+
+                    # print('translation:', translation)
+                    # pdb.set_trace()
+                    # Invert the matrix if the frame id is negative
+                    if self.opt.joint_pose:
+                        trans = transformation_from_parameters(axisangle[:, 0], translation[:, 0], invert=(f_i < 0))
+                        # 顺序是前一帧转到后一帧，需要的是从source image 到target image, 所以f_i < 0的时候需要反转
+                        # pdb.set_trace()
+                        # print('Predict trans:', trans)
+                        trans = trans.unsqueeze(1).repeat(1, 6, 1, 1).reshape(-1, 4, 4)  # torch.Size([6, 4, 4]
+
+                        # pdb.set_trace()
+                        outputs[("cam_T_cam", 0, f_i)] = torch.linalg.inv(inputs["pose_spatial"]) @ trans @ inputs[
+                            "pose_spatial"]
+
+                        # trans
+
+                    else:
+                        outputs[("cam_T_cam", 0, f_i)] = transformation_from_parameters(
+                            axisangle[:, 0], translation[:, 0], invert=(f_i < 0))
+
+
+        else:
+            # Here we input all frames to the pose net (and predict all poses) together
+            if self.opt.pose_model_type in ["separate_resnet", "posecnn"]:
+                pose_inputs = torch.cat(
+                    [inputs[("color_aug", i, 0)] for i in self.opt.frame_ids if i != "s"], 1)
+
+                if self.opt.pose_model_type == "separate_resnet":
+                    pose_inputs = [self.models["pose_encoder"](pose_inputs)]
+
+            elif self.opt.pose_model_type == "shared":
+                pose_inputs = [features[i] for i in self.opt.frame_ids if i != "s"]
+
+            axisangle, translation = self.models["pose"](pose_inputs)
+
+            for i, f_i in enumerate(self.opt.frame_ids[1:]):
+                if f_i != "s":
+                    outputs[("axisangle", 0, f_i)] = axisangle
+                    outputs[("translation", 0, f_i)] = translation
+                    outputs[("cam_T_cam", 0, f_i)] = transformation_from_parameters(
+                        axisangle[:, i], translation[:, i])
+
+
+        return outputs
+
+    def generate_images_pred(self, inputs, outputs):
+        """Generate the warped (reprojected) color images for a minibatch.
+        Generated images are saved into the `outputs` dictionary.
+        """
+
+        # pdb.set_trace()
+        for scale in self.opt.scales:
+
+            disp = outputs[("disp", scale)]
+
+            if self.opt.v1_multiscale:  # False
+                source_scale = scale
+
+            else:
+                disp = F.interpolate(disp, [self.opt.height, self.opt.width], mode="bilinear", align_corners=False)
+                source_scale = 0
+
+            # pdb.set_trace()
+            if self.opt.volume_depth and scale == 0:  # 注意这个，可能需要debug
+                depth = disp
+                if self.local_rank == 0:
+                    print('scale {} volume_depth min: {}, max: {}'.format(scale, depth.min(), depth.max()))
+
+            else:
+                # pdb.set_trace()
+                _, depth = disp_to_depth(disp, self.opt.min_depth, self.opt.max_depth, abs=self.opt.abs)  # 0.1-10
+
+                # 还原到正常scale下的深度值, volume depth 为false
+                if self.opt.focal:
+                    depth = depth * inputs[("K", 0, 0)][:, 0, 0][:, None, None, None] / self.opt.focal_scale
+
+                if self.local_rank == 0 and scale == 1:
+                    print('encoder-decoder depth min: {}, max: {}'.format(depth.min(), depth.max()))
+
+            # 自监督的时候
+            outputs[("depth", 0, scale)] = depth
+
+            for i, frame_id in enumerate(self.opt.frame_ids[1:]):
+
+                # pdb.set_trace()
+                T = outputs[("cam_T_cam", 0, frame_id)]
+
+                # pdb.set_trace()
+                cam_points = self.backproject_depth[source_scale](depth, inputs[("inv_K", 0, source_scale)])
+
+                pix_coords = self.project_3d[source_scale](cam_points, inputs[("K", frame_id, source_scale)], T)
+
+                # pdb.set_trace()
+
+                outputs[("sample", frame_id, scale)] = pix_coords
+
+                outputs[("color", frame_id, scale)] = F.grid_sample(
+                    inputs[("color", frame_id, source_scale)],
+                    outputs[("sample", frame_id, scale)],
+                    padding_mode="border", align_corners=True)
+
+                if not self.opt.disable_automasking:
+                    outputs[("color_identity", frame_id, scale)] = \
+                        inputs[("color", frame_id, source_scale)]
+
+                if self.opt.spatial:  # spatial loss 没开
+
+                    T = inputs[('pose_spatial', frame_id)]
+
+                    cam_points = self.backproject_depth[source_scale](
+                        outputs[("depth", 0, scale)], inputs[("inv_K", 0, source_scale)])
+
+                    K_temp = inputs[("K", 0, source_scale)].clone().reshape(-1, 6, 4, 4)
+
+                    if frame_id == 1:
+                        K_temp = K_temp[:, [1, 2, 3, 4, 5, 0]]
+                        K_temp = K_temp.reshape(-1, 4, 4)
+                    elif frame_id == -1:
+                        K_temp = K_temp[:, [5, 0, 1, 2, 3, 4]]
+                        K_temp = K_temp.reshape(-1, 4, 4)
+                    pix_coords = self.project_3d[source_scale](cam_points, K_temp, T)
+
+                    outputs[("sample_spatial", frame_id, scale)] = pix_coords
+
+                    B, C, H, W = inputs[("color", 0, source_scale)].shape
+                    inputs_temp = inputs[("color", 0, source_scale)].reshape(-1, 6, C, H, W)
+
+                    if self.opt.use_fix_mask:
+                        inputs_mask = inputs["mask"].clone().reshape(-1, 6, 2, H, W)
+
+                    if frame_id == 1:
+                        inputs_temp = inputs_temp[:, [1, 2, 3, 4, 5, 0]]
+                        inputs_temp = inputs_temp.reshape(B, C, H, W)
+                        if self.opt.use_fix_mask:
+                            inputs_mask = inputs_mask[:, [1, 2, 3, 4, 5, 0]]
+                            inputs_mask = inputs_mask.reshape(B, 2, H, W)
+                    elif frame_id == -1:
+                        inputs_temp = inputs_temp[:, [5, 0, 1, 2, 3, 4]]
+                        inputs_temp = inputs_temp.reshape(B, C, H, W)
+                        if self.opt.use_fix_mask:
+                            inputs_mask = inputs_mask[:, [5, 0, 1, 2, 3, 4]]
+                            inputs_mask = inputs_mask.reshape(B, 2, H, W)
+
+                    outputs[("color_spatial", frame_id, scale)] = F.grid_sample(
+                        inputs_temp,
+                        outputs[("sample_spatial", frame_id, scale)],
+                        padding_mode="zeros", align_corners=True)
+
+                    if self.opt.use_fix_mask:
+                        outputs[("color_spatial_mask", frame_id, scale)] = F.grid_sample(
+                            inputs_mask[:, 0:1],
+                            outputs[("sample_spatial", frame_id, scale)],
+                            padding_mode="zeros", align_corners=True, mode='nearest').detach()
+
+                    else:
+                        outputs[("color_spatial_mask", frame_id, scale)] = F.grid_sample(
+                            torch.ones(B, 1, H, W).cuda(),
+                            outputs[("sample_spatial", frame_id, scale)],
+                            padding_mode="zeros", align_corners=True, mode='nearest').detach()
+
+
+    def compute_reprojection_loss(self, pred, target):
+        """Computes reprojection loss between a batch of predicted and target images
+        """
+        abs_diff = torch.abs(target - pred)
+        l1_loss = abs_diff.mean(1, True)
+
+        if self.opt.no_ssim:
+            reprojection_loss = l1_loss
+        else:
+            ssim_loss = self.ssim(pred, target).mean(1, True)
+            reprojection_loss = 0.85 * ssim_loss + 0.15 * l1_loss
+
+        return reprojection_loss
+
+    def get_self_supervision_loss(self, inputs, scale, outputs, disp, source_scale):
+
+        reprojection_losses = []
+
+        loss = 0
+
+        color = inputs[("color", 0, scale)]
+        target = inputs[("color", 0, source_scale)]
+
+        for frame_id in self.opt.frame_ids[1:]:
+            # pdb.set_trace()
+            pred = outputs[("color", frame_id, scale)]
+            reprojection_losses.append(self.compute_reprojection_loss(pred, target))
+
+
+        reprojection_losses = torch.cat(reprojection_losses, 1)
+        # pdb.set_trace()
+
+        if not self.opt.disable_automasking:
+            identity_reprojection_losses = []
+
+            for frame_id in self.opt.frame_ids[1:]:
+                pred = inputs[("color", frame_id, source_scale)]
+                identity_reprojection_losses.append(
+                    self.compute_reprojection_loss(pred, target))
+
+            identity_reprojection_losses = torch.cat(identity_reprojection_losses, 1)
+
+            if self.opt.avg_reprojection:
+                identity_reprojection_loss = identity_reprojection_losses.mean(1, keepdim=True)
+            else:
+                # save both images, and do min all at once below
+                identity_reprojection_loss = identity_reprojection_losses
+
+        elif self.opt.predictive_mask:
+            # use the predicted mask
+            mask = outputs["predictive_mask"]["disp", scale]
+            if not self.opt.v1_multiscale:
+                mask = F.interpolate(
+                    mask, [self.opt.height, self.opt.width],
+                    mode="bilinear", align_corners=False)
+
+            reprojection_losses *= mask
+
+            # add a loss pushing mask to 1 (using nn.BCELoss for stability)
+            weighting_loss = 0.2 * nn.BCELoss()(mask, torch.ones(mask.shape).cuda())
+            loss += weighting_loss.mean()
+
+        if self.opt.use_fix_mask:  # only for DDAD
+            reprojection_losses *= inputs["mask"]  # * output_mask
+
+        if self.opt.avg_reprojection:
+            reprojection_loss = reprojection_losses.mean(1, keepdim=True)
+        
+        else:
+            reprojection_loss = reprojection_losses
+
+        if not self.opt.disable_automasking:
+            # add random numbers to break ties
+            identity_reprojection_loss += torch.randn(identity_reprojection_loss.shape).cuda() * 0.00001
+            combined = torch.cat((identity_reprojection_loss, reprojection_loss), dim=1)
+
+        else:
+            combined = reprojection_loss
+
+        # 选取的是warp之后视角比较小的loss
+        if combined.shape[1] == 1:
+            to_optimise = combined
+        else:
+            to_optimise, idxs = torch.min(combined, dim=1)
+
+        if not self.opt.disable_automasking:
+            outputs["identity_selection/{}".format(scale)] = (
+                    idxs > identity_reprojection_loss.shape[1] - 1).float()
+
+        loss += to_optimise.mean()
+
+        if self.opt.spatial:
+
+            reprojection_losses_spatial = []
+            spatial_mask = []
+            target = inputs[("color", 0, source_scale)]
+
+            for frame_id in self.opt.frame_ids[1:]:
+                pred = outputs[("color_spatial", frame_id, scale)]
+
+                reprojection_losses_spatial.append(
+                    outputs[("color_spatial_mask", frame_id, scale)] * self.compute_reprojection_loss(pred, target))
+
+            reprojection_loss_spatial = torch.cat(reprojection_losses_spatial, 1)
+
+            if self.opt.use_fix_mask:
+                reprojection_loss_spatial *= inputs["mask"]
+
+            loss += self.opt.spatial_weight * reprojection_loss_spatial.mean()
+
+
+        if self.opt.volume_depth:
+
+            disp = F.interpolate(disp, [self.opt.height, self.opt.width], mode="bilinear", align_corners=False)
+            mean_disp = disp.mean(2, True).mean(3, True)
+            # pdb.set_trace()
+            norm_disp = disp / (mean_disp + 1e-7)
+            smooth_loss = get_smooth_loss(norm_disp, target)
+
+            # if self.opt.novel_view_loss and self.opt.rgb_loss > 0 :
+            #     render_img_loss = self.opt.rgb_loss * self.get_image_loss(inputs, scale, outputs, disp, source_scale)
+            #     loss +=  render_img_loss
+            #     if self.local_rank == 0:
+            #         print('render_img_loss:', render_img_loss)
+
+        else:
+            mean_disp = disp.mean(2, True).mean(3, True)
+            norm_disp = disp / (mean_disp + 1e-7)
+            smooth_loss = get_smooth_loss(norm_disp, color)
+
+
+        loss += self.opt.disparity_smoothness * smooth_loss / (2 ** scale)
+
+
+        return loss
 
     def compute_losses(self, inputs, outputs):
         """Compute the reprojection and smoothness losses for a minibatch
@@ -721,6 +1146,7 @@ class Runer:
         losses = {}
 
         total_gt_loss = 0
+        total_self_loss = 0
 
         if self.opt.volume_depth:
             scale_weight = [1.0, 0.7, 0.5]
@@ -741,16 +1167,26 @@ class Runer:
 
 
             disp = outputs[("disp", scale)]
-            gt_loss = self.get_gt_loss(inputs, scale, outputs, disp, depth_gt, mask)
 
-            if self.local_rank == 0 and scale == 0:
-                print('{} gt loss:'.format(scale), gt_loss)
+            if self.opt.loss_type != 'self':
+                gt_loss = self.get_gt_loss(inputs, scale, outputs, disp, depth_gt, mask)
 
-            losses["gt_loss/{}".format(scale)] = gt_loss
-            total_gt_loss += scale_weight[scale] * gt_loss
+                if self.local_rank == 0 and scale == 0:
+                    print('{} gt loss:'.format(scale), gt_loss)
+
+                losses["gt_loss/{}".format(scale)] = gt_loss
+                total_gt_loss += scale_weight[scale] * gt_loss
+
+            if self.opt.loss_type != 'gt':
+                self_supervision_loss = self.get_self_supervision_loss(inputs, scale, outputs, disp, source_scale)
+                losses["self_supervision_loss/{}".format(scale)] = self_supervision_loss
+                total_self_loss += scale_weight[scale] * self_supervision_loss
+
+                if self.local_rank == 0 and scale == 0:
+                    print('{} self_supervision_loss:'.format(scale), self_supervision_loss)
 
 
-        total_loss = total_gt_loss
+        total_loss = total_gt_loss + total_self_loss
 
         total_loss /= self.num_scales
         losses["loss"] = total_loss
@@ -831,6 +1267,8 @@ class Runer:
                 singel_scale_total_loss += smoothness_loss
 
         return singel_scale_total_loss
+
+
 
     def compute_depth_losses(self, inputs, outputs, losses):
         """Compute depth metrics, to allow monitoring during training

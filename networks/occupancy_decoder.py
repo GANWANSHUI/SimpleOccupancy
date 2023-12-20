@@ -22,6 +22,7 @@ import geom
 import vox
 import basic
 import render
+import mesh
 
 
 class VolumeDecoder(nn.Module):
@@ -126,6 +127,11 @@ class VolumeDecoder(nn.Module):
             print('please define the aggregation')
             exit()
 
+        self.N_samples = N_samples
+
+        if self.opt.sdf != 'No':
+            self.sdf2density = render.LaplaceDensity(params_init={'beta': self.opt.beta})
+
 
     def feature2vox_simple(self, features, pix_T_cams, cam0_T_camXs, __p, __u):
 
@@ -183,7 +189,7 @@ class VolumeDecoder(nn.Module):
         return rays_pts, mask_outbbox, Zval, rays_pts_depth
 
     def activate_density(self, density, interval):
-        return 1 - torch.exp(-F.softplus(density) * interval)
+        return 1 - torch.exp(-density * interval)
 
     def get_density(self, rays_o, rays_d, Voxel_feat, is_train, inputs):
 
@@ -220,6 +226,33 @@ class VolumeDecoder(nn.Module):
                 pass
 
         elif self.opt.render_type == 'density':
+
+
+            if self.opt.vis_sdf:
+
+                sample_rate = 4
+
+                if self.opt.sdf != 'No':
+                    query_surf_fn =  lambda mask_rays_pts, Voxel_feat: self.grid_sampler(mask_rays_pts, Voxel_feat)
+                    level = 0.0
+                else:
+                    # pdb.set_trace()
+                    query_surf_fn =  lambda mask_rays_pts, Voxel_feat: -1 * self.grid_sampler(mask_rays_pts, Voxel_feat)
+                    level = -1*0.5
+
+                self.outputs['mesh'] = mesh.extract_simpleocc_mesh(query_surf_fn, query_surf_fn, Voxel_feat = Voxel_feat, 
+                    bmin=self.xyz_min, bmax=self.xyz_max, N=self.N_samples//sample_rate,
+                    include_color=False, filepath=None, show_progress=True, chunk=16384, scale=None, transform=None, level=level)
+
+
+            # pdb.set_trace()
+            if self.opt.sdf != 'No':
+                density = self.sdf2density(density)
+
+            else:
+                density = F.softplus(density)
+
+
             alpha = torch.zeros_like(rays_pts[..., 0])
             interval_list = interval[..., 1:] - interval[..., :-1]
             alpha[~mask_outbbox] = self.activate_density(density, interval_list[0, -1])

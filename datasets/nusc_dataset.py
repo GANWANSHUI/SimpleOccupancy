@@ -35,7 +35,7 @@ class NuscDataset(MonoDataset):
 
         self.split = 'train' if self.is_train else 'val'
         self.data_path = os.path.join(self.opt.dataroot, 'nuscenes')
-        self.depth_path = os.path.join(self.opt.dataroot, 'depth_full')
+        self.depth_path = os.path.join(self.opt.dataroot, 'nuscenes/depth_full')
         self.match_path = os.path.join(self.opt.dataroot, 'match')
         self.point_cloud_path = os.path.join(self.opt.dataroot, 'point_cloud_full')
         self.point_cloud_label_path = os.path.join(self.opt.dataroot, 'point_cloud_{}_label/label_52_0.4_surface_fix_num30_depth_52'.format(self.split))
@@ -85,20 +85,25 @@ class NuscDataset(MonoDataset):
                 inputs["pose_spatial"] = []
 
 
-        if self.opt.use_t != 'No' or self.opt.gt_pose:
-            for idx, i in enumerate(self.frame_idxs[0:2]):
+        if self.opt.gt_pose and self.is_train:
+            for idx, i in enumerate(self.frame_idxs):
                 inputs[('gt_pose', i)] = []
 
 
         inputs['point_cloud'] = []
         inputs['point_cloud_path'] = []
         inputs['point_cloud_label'] = []
+        inputs['point_cloud_name'] = []
 
 
         inputs['width_ori'], inputs['height_ori'], inputs['id'] = [], [], []
 
 
         rec = self.nusc.get('sample', index_temporal)
+
+
+        lidar_sample = self.nusc.get('sample_data', rec['data']['LIDAR_TOP'])
+        inputs['point_cloud_name'].append(lidar_sample['filename'])
 
         # for point cloud
         cam_sample = self.nusc.get('sample_data', rec['data']['CAM_FRONT'])
@@ -113,6 +118,43 @@ class NuscDataset(MonoDataset):
             point_cloud_label = np.load(os.path.join(self.point_cloud_label_path, cam_sample['filename'][:-4] + '.npy'), allow_pickle=True)
             point_cloud_label = dict(point_cloud_label.item())
             inputs['point_cloud_label'].append(point_cloud_label)
+
+
+
+        if self.opt.gt_pose and self.is_train:
+
+            for idx, i in enumerate(self.frame_idxs):
+                # nuscenes 自动就已经分类好了前后帧
+                if i == 0:
+                    # index_temporal_i = cam_sample['prev']
+                    cam_sample_i = cam_sample
+                elif i == -1:
+                    # print('cam_sample', cam_sample['prev'])
+                    # print('----------')
+                    index_temporal_i = cam_sample['prev']
+                    # cam_sample_i = cam_sample
+                    cam_sample_i = self.nusc.get('sample_data', index_temporal_i)
+
+                elif i == 1:
+                    # print('cam_sample', cam_sample['prev'])
+                    # print('----------')
+                    index_temporal_i = cam_sample['next']
+                    # cam_sample_i = cam_sample
+                    cam_sample_i = self.nusc.get('sample_data', index_temporal_i)
+
+
+                car_egopose = self.nusc.get('ego_pose', cam_sample_i['ego_pose_token'])
+
+
+                # car2world
+                egopose_rotation = Quaternion(car_egopose['rotation'])
+                egopose_translation = np.array(car_egopose['translation'])[:, None]
+
+                world_to_car_egopose = np.vstack([
+                    np.hstack((egopose_rotation.rotation_matrix, egopose_translation)),
+                    np.array([0, 0, 0, 1])])
+
+                inputs["gt_pose", i] = torch.from_numpy(world_to_car_egopose.astype(np.float32)).unsqueeze(0)
 
 
         for index_spatial in range(6):

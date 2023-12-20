@@ -20,8 +20,6 @@ from torchvision import transforms
 import pdb
 import open3d as o3d
 
-
-
 def pil_loader(path):
     # open path as file to avoid ResourceWarning
     # (https://github.com/python-pillow/Pillow/issues/835)

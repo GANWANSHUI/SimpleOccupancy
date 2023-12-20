@@ -410,6 +410,10 @@ class MonodepthOptions:
 
         self.parser.add_argument("--dataroot", type=str, help="the root for the ddad and nuscenes dataset", default='/data/ggeoinfo/Wanshui_BEV/data/ddad')
 
+        # sdf
+        self.parser.add_argument("--sdf", type=str, default='No', help="if set, model the sky with mlp")
+        self.parser.add_argument("--beta", type=float, default=1.0, help="the initial weight of beta in sdf")
+        self.parser.add_argument("--vis_sdf", type=lambda x: x.lower() == 'true', default=False, help="if set, vis sdf")
 
 
     def parse(self):
