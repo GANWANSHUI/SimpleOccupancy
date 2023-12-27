@@ -2,6 +2,8 @@
 
 [Arxiv Paper](https://arxiv.org/pdf/2303.10076.pdf)
 
+[中文解读](https://zhuanlan.zhihu.com/p/673456177)
+
 > A **Simple** Framework for 3D **Occupancy** Estimation in Autonomous Driving
 > 
 > Wanshui Gan, Ningkai Mo, Hongbin Xu, Naoto Yokoya 
