@@ -2,11 +2,17 @@
 
 [Arxiv Paper](https://arxiv.org/pdf/2303.10076.pdf)
 
+[IEEE TIV Early Access](https://www.dropbox.com/scl/fi/41v8kk0rynfxxjp8ri0dr/A_Comprehensive_Framework_for_3D_Occupancy_Estimation_in_Autonomous_Driving.pdf?rlkey=cbdeu6ivm2az1937wrutox41k&st=so5k80hh&dl=0) (recommend to read this one)
+
+[Supplement](https://www.dropbox.com/scl/fi/ui1wyf09ve4finqultpei/SimpleOcc_supplement.pdf?rlkey=z6o07oke3u7f19ojp3j0sxk7f&st=lgsftfad&dl=0)
+
 [中文解读](https://zhuanlan.zhihu.com/p/673456177)
 
-> A **Simple** Framework for 3D **Occupancy** Estimation in Autonomous Driving
+> A **Comprehensive** Framework for 3D **Occupancy** Estimation in Autonomous Driving
 > 
-> Wanshui Gan, Ningkai Mo, Hongbin Xu, Naoto Yokoya 
+> Wanshui Gan, Ningkai Mo, Hongbin Xu, Naoto Yokoya
+> 
+> Previous used titles, 1) A Simple Framework for 3D Occupancy Estimation in Autonomous Driving, 2) A Simple Attempt for 3D Occupancy Estimation in Autonomous Driving
 
 
 ## News
