@@ -65,7 +65,7 @@ Self-supervised learning with Density (Max depth = 52 m)
 
 
 ## Abstract
-The task of estimating 3D occupancy from surrounding-view images is an exciting development in the field of autonomous driving, following the success of Bird's Eye View (BEV) perception. This task provides crucial 3D attributes of the driving environment, enhancing the overall understanding and perception of the surrounding space. In this work, we present a simple framework for 3D occupancy estimation, which is a CNN-based framework designed to reveal several key factors for 3D occupancy estimation, such as network design, optimization, and evaluation. In addition, we explore the relationship between 3D occupancy estimation and other related tasks, such as monocular depth estimation and 3D reconstruction, which could advance the study of 3D perception in autonomous driving. For evaluation, we propose a simple sampling strategy to define the metric for occupancy evaluation, which is flexible for current public datasets. Moreover, we establish the benchmark in terms of the depth estimation metric, where we compare our proposed method with monocular depth estimation methods on the DDAD and Nuscenes datasets and achieve competitive performance. 
+The task of estimating 3D occupancy from surrounding-view images is an exciting development in the field of autonomous driving, following the success of Bird's Eye View (BEV) perception. This task provides crucial 3D attributes of the driving environment, enhancing the overall understanding and perception of the surrounding space. In this work, we present a simple framework for 3D occupancy estimation, which is a CNN-based framework designed to reveal several key factors for 3D occupancy estimation, such as network design, optimization, and evaluation. In addition, we explore the relationship between 3D occupancy estimation and other related tasks, such as monocular depth estimation and 3D reconstruction, which could advance the study of 3D perception in autonomous driving. For evaluation, we propose a simple sampling strategy to define the metric for occupancy evaluation, which is flexible for current public datasets. Moreover, we establish a benchmark in terms of the depth estimation metric, where we compare our proposed method with monocular depth estimation methods on the DDAD and Nuscenes datasets and achieve competitive performance. 
 ## Method 
 
 Proposed network:
@@ -79,7 +79,11 @@ Occupancy label and metric comparison:
 <p align='center'>
 <img src="./assets/metric.png" width="720px">
 </p>
+The proposed discrete depth metric and chamfer distance metric comparison:
 
+<p align='center'>
+<img src="./assets/Chamfer.png" width="720px">
+</p>
 
 ## Acknowledgement
 Many thanks to these excellent projects:
@@ -94,6 +98,8 @@ Related Projects:
 - [VoxFormer](https://github.com/NVlabs/VoxFormer)
 - [MonoScene](https://github.com/astra-vision/MonoScene)
 - [BEVFormer](https://github.com/fundamentalvision/BEVFormer)
+
+This work was partially supported by JST, FOREST under Grant Number JPMJFR206S. Wanshui Gan would also like to express gratitude for the student scholarship provided by TIER IV.
 
 
 ## Bibtex
