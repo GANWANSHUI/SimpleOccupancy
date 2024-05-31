@@ -70,7 +70,7 @@ The task of estimating 3D occupancy from surrounding-view images is an exciting 
 
 Proposed network:
 <p align='center'>
-<img src="./assets/Network_self.png" width="920px">
+<img src="./assets/framework.png" width="920px">
 </p>
 
 Occupancy label and metric comparison:
@@ -104,6 +104,14 @@ If you find this repository/work helpful in your research, welcome to cite the p
   author={Gan, Wanshui and Mo, Ningkai and Xu, Hongbin and Yokoya, Naoto},
   journal={arXiv preprint arXiv:2303.10076},
   year={2023}
+}
+
+@article{gan2024comprehensive,
+  title={A Comprehensive Framework for 3D Occupancy Estimation in Autonomous Driving},
+  author={Gan, Wanshui and Mo, Ningkai and Xu, Hongbin and Yokoya, Naoto},
+  journal={IEEE Transactions on Intelligent Vehicles},
+  year={2024},
+  publisher={IEEE}
 }
 ```
 
