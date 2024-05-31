@@ -12,7 +12,7 @@
 > 
 > Wanshui Gan, Ningkai Mo, Hongbin Xu, Naoto Yokoya
 > 
-> Previous used titles, 1) A Simple Framework for 3D Occupancy Estimation in Autonomous Driving, 2) A Simple Attempt for 3D Occupancy Estimation in Autonomous Driving
+> Previous used titles, 1) A Simple Framework for 3D Occupancy Estimation in Autonomous Driving, 2) A Simple Attempt for 3D Occupancy Estimation in Autonomous Driving.   谁懂啊，QwQ
 
 
 ## News
