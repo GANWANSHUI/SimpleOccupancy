@@ -17,6 +17,7 @@
 
 ## News
 -- Note that the demos are large, please wait a moment to load them. 
+- [2024/08/31]: Check our latest work [GaussianOcc](https://github.com/GANWANSHUI/GaussianOcc) for the fully self-supervised and efficient 3D occupancy estimation with Gaussian splatting.
 - [2024/05/14]: This work has been accepted by IEEE Transactions on Intelligent Vehicles.
 - [2023/12/20]: Supplement the code self-supervised learning, 3D (sdf,mesh) reconstruction and its visualization.
 - [2023/10/20]: We extend the framework to the 3D reconstruction task based on the SDF at the mesh level with the self-supervised setting. I am open to discussion and collaboration on related topics.
@@ -119,6 +120,13 @@ If you find this repository/work helpful in your research, welcome to cite the p
   year={2024},
   publisher={IEEE}
 }
+@article{gan2024gaussianocc,
+  title={GaussianOcc: Fully Self-supervised and Efficient 3D Occupancy Estimation with Gaussian Splatting},
+  author={Gan, Wanshui and Liu, Fang and Xu, Hongbin and Mo, Ningkai and Yokoya, Naoto},
+  journal={arXiv preprint arXiv:2408.11447},
+  year={2024}
+}
+
 ```
 
 
