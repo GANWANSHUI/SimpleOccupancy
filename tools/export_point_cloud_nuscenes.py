@@ -94,6 +94,8 @@ class DepthGenerator(object):
                 print('egopose_translation', egopose_translation)
                 print('world_to_car_egopose', world_to_car_egopose)
 
+                if 'CAM_FRONT' in camera_sample['filename'][:-4]:
+                    point_cloud_name = camera_sample['filename'][:-4]
 
 
             pdb.set_trace()
